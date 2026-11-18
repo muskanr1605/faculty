@@ -1,0 +1,174 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | Faculty Management System</title>
+
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+    <div class="dashboard">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <h2>Faculty Management</h2>
+
+            <nav>
+    <a href="dashboard.html" class="active">Dashboard</a>
+
+    <a href="faculty.html"
+       onclick="window.location.href='faculty.html'; return false;">
+        Faculty
+    </a>
+
+    <a href="departments.html"
+       onclick="window.location.href='departments.html'; return false;">
+        Departments
+    </a>
+
+    <a href="subjects.html"
+       onclick="window.location.href='subjects.html'; return false;">
+        Subjects
+    </a>
+
+    
+    <a href="../index.html"
+       onclick="window.location.href='../index.html'; return false;">
+        Logout
+    </a>
+</nav>
+
+        </aside>
+
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <header class="topbar">
+                <h1>Dashboard</h1>
+
+                <div class="admin">
+                    👤 Admin
+                </div>
+            </header>
+
+
+            <section class="welcome">
+
+                <h2>Welcome to Faculty Management System 👋</h2>
+
+                <p>
+                    Manage faculty, departments, subjects and faculty-subject
+                    from one place.
+                </p>
+
+            </section>
+
+
+
+<!-- Statistics -->
+<section class="cards">
+
+    <div class="card">
+        <h3>Total Faculty</h3>
+        <p id="totalFaculty">Loading...</p>
+    </div>
+
+    <div class="card">
+        <h3>Departments</h3>
+        <p id="totalDepartments">Loading...</p>
+    </div>
+
+    <div class="card">
+        <h3>Subjects</h3>
+        <p id="totalSubjects">Loading...</p>
+    </div>
+
+   
+
+</section>
+
+
+
+            <!-- Quick Actions -->
+            <section class="quick-actions">
+
+    <h2>Quick Actions</h2>
+
+    <div class="action-buttons">
+
+        <button onclick="window.location.href='add-faculty.html'">
+            Add Faculty
+        </button>
+
+        <button onclick="window.location.href='departments.html'">
+            Manage Departments
+        </button>
+
+        <button onclick="window.location.href='subjects.html'">
+            Manage Subjects
+        </button>
+
+    </div>
+
+</section>
+
+        </main>
+
+    </div>
+
+<script>
+    console.log("DASHBOARD SCRIPT RUNNING!");
+    const API_BASE_URL = "http://localhost:8080/api";
+
+    async function loadDashboardStats() {
+        try {
+            const [facultyResponse, departmentResponse, subjectResponse] =
+                await Promise.all([
+                    fetch(`${API_BASE_URL}/faculty`),
+                    fetch(`${API_BASE_URL}/departments`),
+                    fetch(`${API_BASE_URL}/subjects`)
+                ]);
+
+            if (!facultyResponse.ok ||
+                !departmentResponse.ok ||
+                !subjectResponse.ok) {
+                throw new Error("Unable to load dashboard data");
+            }
+
+            const faculty = await facultyResponse.json();
+            const departments = await departmentResponse.json();
+            const subjects = await subjectResponse.json();
+
+            document.getElementById("totalFaculty").textContent =
+                faculty.length;
+
+            document.getElementById("totalDepartments").textContent =
+                departments.length;
+
+            document.getElementById("totalSubjects").textContent =
+                subjects.length;
+
+        } catch (error) {
+            console.error("Dashboard API error:", error);
+
+            document.getElementById("totalFaculty").textContent = "Unavailable";
+            document.getElementById("totalDepartments").textContent = "Unavailable";
+            document.getElementById("totalSubjects").textContent = "Unavailable";
+        }
+    }
+
+    loadDashboardStats();
+</script>
+
+
+</body>
+
+</html>

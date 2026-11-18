@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Add Faculty | Faculty Management System</title>
+
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+
+    <div class="dashboard">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <h2>Faculty Management</h2>
+
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="faculty.html" class="active">Faculty</a>
+                <a href="#">Departments</a>
+                <a href="#">Subjects</a>
+                <a href="../index.html">Logout</a>
+            </nav>
+
+        </aside>
+
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <header class="topbar">
+
+                <h1>Add Faculty</h1>
+
+                <div class="admin">
+                    👤 Admin
+                </div>
+
+            </header>
+
+
+            <section class="form-section">
+
+                <h2>Faculty Information</h2>
+
+                <form id="facultyForm">
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+                            <label>Faculty Code</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. FAC005"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label>First Name</label>
+                            <input
+                                type="text"
+                                placeholder="Enter first name"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label>Last Name</label>
+                            <input
+                                type="text"
+                                placeholder="Enter last name"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                placeholder="Enter email"
+                                required
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input
+                                type="text"
+                                placeholder="Enter phone number"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label>Designation</label>
+
+                            <select>
+                                <option value="">Select Designation</option>
+                                <option>Professor</option>
+                                <option>Associate Professor</option>
+                                <option>Assistant Professor</option>
+                                <option>Lecturer</option>
+                            </select>
+
+                        </div>
+
+                        <div class="form-group">
+                            <label>Qualification</label>
+
+                            <input
+                                type="text"
+                                placeholder="e.g. Ph.D, M.Tech"
+                            >
+
+                        </div>
+
+                        <div class="form-group">
+                            <label>Experience (Years)</label>
+
+                            <input
+                                type="number"
+                                min="0"
+                                placeholder="Enter experience"
+                            >
+
+                        </div>
+
+                        <div class="form-group">
+
+                            <label>Department</label>
+
+                            <select required>
+
+                                <option value="">
+                                    Select Department
+                                </option>
+
+                                <option>
+                                    Computer Science
+                                </option>
+
+                                <option>
+                                    Information Technology
+                                </option>
+
+                                <option>
+                                    Electronics and Communication
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-buttons">
+
+                        <button type="submit" class="save-btn">
+                            Save Faculty
+                        </button>
+
+                        <a href="faculty.html" class="cancel-btn">
+                            Cancel
+                        </a>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>

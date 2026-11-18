@@ -1,0 +1,465 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subjects | Faculty Management System</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+<div class="dashboard">
+
+    <aside class="sidebar">
+        <h2>Faculty Management</h2>
+        <nav>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="faculty.html">Faculty</a>
+            <a href="departments.html">Departments</a>
+            <a href="subjects.html" class="active">Subjects</a>
+            <a href="index.html">Logout</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="topbar">
+            <h1>Subject Management</h1>
+            <div class="admin">👤 Admin</div>
+        </header>
+
+        <section class="welcome">
+            <div class="faculty-header">
+                <div>
+                    <h2>Subjects</h2>
+                    <p>Manage all subjects offered by different departments.</p>
+                </div>
+
+                <button class="add-btn" id="addSubjectBtn" type="button">
+                    + Add Subject
+                </button>
+            </div>
+        </section>
+
+        <section class="search-section">
+            <input
+                type="text"
+                id="subjectSearch"
+                placeholder="Search by subject name, code or department..."
+            >
+        </section>
+
+        <!-- Add/Edit Subject Form -->
+        <section id="subjectFormSection" class="welcome"
+                 style="display: none; margin-bottom: 20px;">
+
+            <h2 id="subjectFormTitle">Add Subject</h2>
+
+            <form id="subjectForm">
+
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; margin-top: 20px;">
+
+                    <div>
+                        <label for="subjectCode">Subject Code *</label>
+                        <input type="text" id="subjectCode"
+                               required maxlength="30"
+                               placeholder="e.g. CS301">
+                    </div>
+
+                    <div>
+                        <label for="subjectName">Subject Name *</label>
+                        <input type="text" id="subjectName"
+                               required maxlength="150"
+                               placeholder="Enter subject name">
+                    </div>
+
+                    <div>
+                        <label for="semester">Semester *</label>
+                        <input type="number" id="semester"
+                               required min="1" max="12"
+                               placeholder="Enter semester">
+                    </div>
+
+                    <div>
+                        <label for="credits">Credits *</label>
+                        <input type="number" id="credits"
+                               required min="1" max="20"
+                               placeholder="Enter credits">
+                    </div>
+
+                    <div>
+                        <label for="departmentId">Department *</label>
+                        <select id="departmentId" required>
+                            <option value="">Select Department</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px;">
+                    <button type="submit" class="add-btn" id="saveSubjectBtn">
+                        Save Subject
+                    </button>
+
+                    <button type="button" id="cancelSubjectBtn"
+                            class="delete-btn">
+                        Cancel
+                    </button>
+                </div>
+
+                <p id="subjectFormMessage" role="status"
+                   style="margin-top: 12px;"></p>
+
+            </form>
+        </section>
+
+        <!-- Subjects Table -->
+        <section class="table-section">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Subject Code</th>
+                        <th>Subject Name</th>
+                        <th>Semester</th>
+                        <th>Credits</th>
+                        <th>Department</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="subjectTableBody">
+                    <tr>
+                        <td colspan="7">Loading subjects...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+</div>
+
+<script>
+const API_BASE_URL = "http://localhost:8080/api";
+
+let allSubjects = [];
+let allDepartments = [];
+let editingSubjectId = null;
+
+const subjectTableBody = document.getElementById("subjectTableBody");
+const subjectForm = document.getElementById("subjectForm");
+const formSection = document.getElementById("subjectFormSection");
+const formMessage = document.getElementById("subjectFormMessage");
+const saveButton = document.getElementById("saveSubjectBtn");
+const departmentSelect = document.getElementById("departmentId");
+
+// Load departments for the dropdown
+async function loadDepartments() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/departments`);
+
+        if (!response.ok) {
+            throw new Error(`Department request failed: ${response.status}`);
+        }
+
+        allDepartments = await response.json();
+
+        departmentSelect.innerHTML =
+            '<option value="">Select Department</option>';
+
+        allDepartments.forEach(department => {
+            const option = document.createElement("option");
+            option.value = department.departmentId;
+            option.textContent = department.departmentName;
+            departmentSelect.appendChild(option);
+        });
+
+    } catch (error) {
+        console.error("Load Departments Error:", error);
+        departmentSelect.innerHTML =
+            '<option value="">Unable to load departments</option>';
+    }
+}
+
+// Load subjects from backend
+async function loadSubjects() {
+    subjectTableBody.innerHTML =
+        '<tr><td colspan="7">Loading subjects...</td></tr>';
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/subjects`);
+
+        if (!response.ok) {
+            throw new Error(`Subject request failed: ${response.status}`);
+        }
+
+        allSubjects = await response.json();
+        renderSubjects(allSubjects);
+
+    } catch (error) {
+        console.error("Load Subjects Error:", error);
+
+        subjectTableBody.innerHTML =
+            '<tr><td colspan="7">Unable to load subjects. Check the backend.</td></tr>';
+    }
+}
+
+// Find department name using its ID
+function getDepartmentName(departmentId) {
+    const department = allDepartments.find(
+        item => String(item.departmentId) === String(departmentId)
+    );
+
+    return department ? department.departmentName : `Department ID: ${departmentId}`;
+}
+
+// Display subjects in table
+function renderSubjects(subjects) {
+    subjectTableBody.innerHTML = "";
+
+    if (subjects.length === 0) {
+        subjectTableBody.innerHTML =
+            '<tr><td colspan="7">No subjects found.</td></tr>';
+        return;
+    }
+
+    subjects.forEach(subject => {
+        const row = document.createElement("tr");
+        row.dataset.subjectId = subject.subjectId;
+
+        const values = [
+            subject.subjectId,
+            subject.subjectCode,
+            subject.subjectName,
+            subject.semester,
+            subject.credits,
+            getDepartmentName(subject.departmentId)
+        ];
+
+        values.forEach(value => {
+            const cell = document.createElement("td");
+            cell.textContent = value ?? "-";
+            row.appendChild(cell);
+        });
+
+        const actionsCell = document.createElement("td");
+
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.className = "edit-btn";
+        editButton.textContent = "Edit";
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "delete-btn";
+        deleteButton.textContent = "Delete";
+
+        actionsCell.append(editButton, document.createTextNode(" "), deleteButton);
+        row.appendChild(actionsCell);
+        subjectTableBody.appendChild(row);
+    });
+}
+
+// Open form to add a subject
+document.getElementById("addSubjectBtn").addEventListener("click", () => {
+    editingSubjectId = null;
+    subjectForm.reset();
+
+    document.getElementById("subjectFormTitle").textContent = "Add Subject";
+    saveButton.textContent = "Save Subject";
+    formMessage.textContent = "";
+
+    formSection.style.display = "block";
+    formSection.scrollIntoView({ behavior: "smooth" });
+});
+
+// Cancel form
+document.getElementById("cancelSubjectBtn").addEventListener("click", () => {
+    subjectForm.reset();
+    editingSubjectId = null;
+    formSection.style.display = "none";
+    formMessage.textContent = "";
+});
+
+// Edit/Delete buttons
+subjectTableBody.addEventListener("click", async event => {
+    const button = event.target.closest("button");
+
+    if (!button) return;
+
+    const row = button.closest("tr");
+    const subjectId = row?.dataset.subjectId;
+
+    if (!subjectId) return;
+
+    // Edit subject
+    if (button.classList.contains("edit-btn")) {
+        const subject = allSubjects.find(
+            item => String(item.subjectId) === String(subjectId)
+        );
+
+        if (!subject) {
+            alert("Subject details could not be found.");
+            return;
+        }
+
+        editingSubjectId = subject.subjectId;
+
+        document.getElementById("subjectCode").value = subject.subjectCode ?? "";
+        document.getElementById("subjectName").value = subject.subjectName ?? "";
+        document.getElementById("semester").value = subject.semester ?? "";
+        document.getElementById("credits").value = subject.credits ?? "";
+        departmentSelect.value = String(subject.departmentId ?? "");
+
+        document.getElementById("subjectFormTitle").textContent = "Edit Subject";
+        saveButton.textContent = "Update Subject";
+        formMessage.textContent = "";
+
+        formSection.style.display = "block";
+        formSection.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // Delete subject
+    if (button.classList.contains("delete-btn")) {
+        const confirmed = confirm(
+            `Delete subject "${row.cells[2].textContent}"?`
+        );
+
+        if (!confirmed) return;
+
+        button.disabled = true;
+
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/subjects/${subjectId}`,
+                { method: "DELETE" }
+            );
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || `Delete failed: ${response.status}`);
+            }
+
+            alert("Subject deleted successfully!");
+            await loadSubjects();
+
+        } catch (error) {
+            console.error("Delete Subject Error:", error);
+
+            alert(
+                "Could not delete subject. Check the backend terminal for details."
+            );
+        } finally {
+            button.disabled = false;
+        }
+    }
+});
+
+// Add/Update subject
+subjectForm.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const subjectData = {
+        subjectCode: document.getElementById("subjectCode").value.trim(),
+        subjectName: document.getElementById("subjectName").value.trim(),
+        semester: Number(document.getElementById("semester").value),
+        credits: Number(document.getElementById("credits").value),
+        departmentId: Number(departmentSelect.value)
+    };
+
+    if (
+        !subjectData.subjectCode ||
+        !subjectData.subjectName ||
+        !subjectData.semester ||
+        !subjectData.credits ||
+        !subjectData.departmentId
+    ) {
+        formMessage.textContent = "Please fill in all required fields.";
+        return;
+    }
+
+    const isEditing = editingSubjectId !== null;
+
+    const url = isEditing
+        ? `${API_BASE_URL}/subjects/${editingSubjectId}`
+        : `${API_BASE_URL}/subjects`;
+
+    const method = isEditing ? "PUT" : "POST";
+
+    saveButton.disabled = true;
+    formMessage.textContent = isEditing
+        ? "Updating subject..."
+        : "Saving subject...";
+
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(subjectData)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText || `Request failed: ${response.status}`);
+        }
+
+        formMessage.textContent = isEditing
+            ? "Subject updated successfully!"
+            : "Subject added successfully!";
+
+        subjectForm.reset();
+        editingSubjectId = null;
+
+        await loadSubjects();
+
+        setTimeout(() => {
+            formSection.style.display = "none";
+            formMessage.textContent = "";
+            document.getElementById("subjectFormTitle").textContent = "Add Subject";
+            saveButton.textContent = "Save Subject";
+        }, 900);
+
+    } catch (error) {
+        console.error("Save Subject Error:", error);
+
+        formMessage.textContent =
+            "Could not save subject. Check the subject code is unique, department exists, and backend logs.";
+    } finally {
+        saveButton.disabled = false;
+    }
+});
+
+// Search subjects
+document.getElementById("subjectSearch").addEventListener("input", function () {
+    const searchText = this.value.toLowerCase().trim();
+
+    const filteredSubjects = allSubjects.filter(subject => {
+        const code = (subject.subjectCode ?? "").toLowerCase();
+        const name = (subject.subjectName ?? "").toLowerCase();
+
+        const departmentName = getDepartmentName(subject.departmentId).toLowerCase();
+
+        return code.includes(searchText)
+            || name.includes(searchText)
+            || departmentName.includes(searchText)
+            || String(subject.semester ?? "").includes(searchText);
+    });
+
+    renderSubjects(filteredSubjects);
+});
+
+// Start
+async function initializeSubjectsPage() {
+    await loadDepartments();
+    await loadSubjects();
+}
+
+initializeSubjectsPage();
+</script>
+
+</body>
+</html>
+

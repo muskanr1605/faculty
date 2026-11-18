@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Subject | Faculty Management System</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <div class="dashboard">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+
+            <h2>Faculty Management</h2>
+
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="faculty.html">Faculty</a>
+                <a href="departments.html">Departments</a>
+                <a href="subjects.html" class="active">Subjects</a>
+              
+               <a href="../index.html">Logout</a>
+            </nav>
+
+        </aside>
+
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Topbar -->
+            <header class="topbar">
+                <h1>Add Subject</h1>
+                <div class="admin">👤 Admin</div>
+            </header>
+
+
+            <!-- Form -->
+            <section class="form-section">
+
+                <h2>Subject Information</h2>
+
+                <form id="subjectForm">
+
+                    <div class="form-grid">
+
+                        <!-- Subject Code -->
+                        <div class="form-group">
+                            <label>Subject Code</label>
+
+                            <input
+                                type="text"
+                                placeholder="e.g. CS303"
+                                required
+                            >
+                        </div>
+
+
+                        <!-- Subject Name -->
+                        <div class="form-group">
+                            <label>Subject Name</label>
+
+                            <input
+                                type="text"
+                                placeholder="Enter subject name"
+                                required
+                            >
+                        </div>
+
+
+                        <!-- Semester -->
+                        <div class="form-group">
+                            <label>Semester</label>
+
+                            <select required>
+                                <option value="">Select Semester</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                                <option value="3">Semester 3</option>
+                                <option value="4">Semester 4</option>
+                                <option value="5">Semester 5</option>
+                                <option value="6">Semester 6</option>
+                                <option value="7">Semester 7</option>
+                                <option value="8">Semester 8</option>
+                            </select>
+                        </div>
+
+
+                        <!-- Credits -->
+                        <div class="form-group">
+                            <label>Credits</label>
+
+                            <input
+                                type="number"
+                                min="1"
+                                max="10"
+                                placeholder="Enter credits"
+                                required
+                            >
+                        </div>
+
+
+                        <!-- Department -->
+                        <div class="form-group">
+
+                            <label>Department</label>
+
+                            <select required>
+
+                                <option value="">
+                                    Select Department
+                                </option>
+
+                                <option>
+                                    Computer Science
+                                </option>
+
+                                <option>
+                                    Information Technology
+                                </option>
+
+                                <option>
+                                    Electronics and Communication
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Buttons -->
+                    <div class="form-buttons">
+
+                        <button
+                            type="submit"
+                            class="save-btn"
+                        >
+                            Save Subject
+                        </button>
+
+                        <a
+                            href="subjects.html"
+                            class="cancel-btn"
+                        >
+                            Cancel
+                        </a>
+
+                    </div>
+
+                </form>
+
+            </section>
+
+        </main>
+
+    </div>
+
+</body>
+</html>

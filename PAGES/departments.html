@@ -1,0 +1,415 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departments | Faculty Management System</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+
+<body>
+    <div class="dashboard">
+
+        <aside class="sidebar">
+            <h2>Faculty Management</h2>
+
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="faculty.html">Faculty</a>
+                <a href="departments.html" class="active">Departments</a>
+                <a href="subjects.html">Subjects</a>
+               
+                <a href="index.html">Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+
+            <header class="topbar">
+                <h1>Department Management</h1>
+                <div class="admin">👤 Admin</div>
+            </header>
+
+            <section class="welcome">
+                <div class="faculty-header">
+                    <div>
+                        <h2>Departments</h2>
+                        <p>Manage all academic departments of the institution.</p>
+                    </div>
+
+                    <button class="add-btn" id="addDepartmentBtn" type="button">
+                        + Add Department
+                    </button>
+                </div>
+            </section>
+
+            <!-- Search -->
+            <section class="search-section">
+                <input
+                    type="text"
+                    id="departmentSearch"
+                    placeholder="Search by department name or HOD..."
+                >
+            </section>
+
+            <!-- Add/Edit Form -->
+            <section
+                id="departmentFormSection"
+                class="welcome"
+                style="display: none; margin-bottom: 20px;"
+            >
+                <h2 id="departmentFormTitle">Add Department</h2>
+
+                <form id="departmentForm">
+
+                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; margin-top: 20px;">
+
+                        <div>
+                            <label for="departmentName">Department Name *</label>
+                            <input
+                                type="text"
+                                id="departmentName"
+                                required
+                                maxlength="100"
+                                placeholder="Enter department name"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="hodName">HOD Name</label>
+                            <input
+                                type="text"
+                                id="hodName"
+                                maxlength="100"
+                                placeholder="Enter HOD name"
+                            >
+                        </div>
+
+                    </div>
+
+                    <div style="margin-top: 20px; display: flex; gap: 10px;">
+                        <button type="submit" class="add-btn" id="saveDepartmentBtn">
+                            Save Department
+                        </button>
+
+                        <button type="button" id="cancelDepartmentBtn" class="delete-btn">
+                            Cancel
+                        </button>
+                    </div>
+
+                    <p id="departmentFormMessage" role="status" style="margin-top: 12px;"></p>
+
+                </form>
+            </section>
+
+            <!-- Department Table -->
+            <section class="table-section">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Department Name</th>
+                            <th>HOD Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="departmentTableBody">
+                        <tr>
+                            <td colspan="4">Loading departments...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        const API_BASE_URL = "http://localhost:8080/api";
+
+        let editingDepartmentId = null;
+        let allDepartments = [];
+
+        const tableBody = document.getElementById("departmentTableBody");
+        const departmentForm = document.getElementById("departmentForm");
+        const formSection = document.getElementById("departmentFormSection");
+        const formMessage = document.getElementById("departmentFormMessage");
+        const saveButton = document.getElementById("saveDepartmentBtn");
+
+        // Load all departments
+        async function loadDepartments() {
+            tableBody.innerHTML = `
+                <tr><td colspan="4">Loading departments...</td></tr>
+            `;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/departments`);
+
+                if (!response.ok) {
+                    throw new Error(`Unable to load departments (${response.status})`);
+                }
+
+                allDepartments = await response.json();
+                renderDepartments(allDepartments);
+
+            } catch (error) {
+                console.error("Load Departments Error:", error);
+
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4">
+                            Unable to load departments. Check that the backend is running.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Display departments in the table
+        function renderDepartments(departments) {
+            tableBody.innerHTML = "";
+
+            if (departments.length === 0) {
+                tableBody.innerHTML = `
+                    <tr><td colspan="4">No departments found.</td></tr>
+                `;
+                return;
+            }
+
+            departments.forEach(department => {
+                const row = document.createElement("tr");
+                row.dataset.departmentId = department.departmentId;
+
+                // Use textContent to display database values safely.
+                const idCell = document.createElement("td");
+                idCell.textContent = department.departmentId;
+
+                const nameCell = document.createElement("td");
+                nameCell.textContent = department.departmentName ?? "-";
+
+                const hodCell = document.createElement("td");
+                hodCell.textContent = department.hodName ?? "-";
+
+                const actionsCell = document.createElement("td");
+
+                const editButton = document.createElement("button");
+                editButton.type = "button";
+                editButton.className = "edit-btn";
+                editButton.textContent = "Edit";
+
+                const deleteButton = document.createElement("button");
+                deleteButton.type = "button";
+                deleteButton.className = "delete-btn";
+                deleteButton.textContent = "Delete";
+
+                actionsCell.append(editButton, " ", deleteButton);
+                row.append(idCell, nameCell, hodCell, actionsCell);
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Open form for adding a department
+        document.getElementById("addDepartmentBtn").addEventListener("click", function () {
+            editingDepartmentId = null;
+            departmentForm.reset();
+
+            document.getElementById("departmentFormTitle").textContent = "Add Department";
+            saveButton.textContent = "Save Department";
+            formMessage.textContent = "";
+
+            formSection.style.display = "block";
+            formSection.scrollIntoView({ behavior: "smooth" });
+            document.getElementById("departmentName").focus();
+        });
+
+        // Cancel form
+        document.getElementById("cancelDepartmentBtn").addEventListener("click", function () {
+            departmentForm.reset();
+            editingDepartmentId = null;
+            formSection.style.display = "none";
+            formMessage.textContent = "";
+        });
+
+        // Handle Add and Edit button clicks
+        tableBody.addEventListener("click", async function (event) {
+            const button = event.target.closest("button");
+
+            if (!button) return;
+
+            const row = button.closest("tr");
+            const departmentId = row?.dataset.departmentId;
+
+            if (!departmentId) return;
+
+            // Edit department
+            if (button.classList.contains("edit-btn")) {
+                const department = allDepartments.find(
+                    item => String(item.departmentId) === String(departmentId)
+                );
+
+                if (!department) {
+                    alert("Department details could not be found.");
+                    return;
+                }
+
+                editingDepartmentId = department.departmentId;
+
+                document.getElementById("departmentName").value =
+                    department.departmentName ?? "";
+
+                document.getElementById("hodName").value =
+                    department.hodName ?? "";
+
+                document.getElementById("departmentFormTitle").textContent =
+                    "Edit Department";
+
+                saveButton.textContent = "Update Department";
+                formMessage.textContent = "";
+
+                formSection.style.display = "block";
+                formSection.scrollIntoView({ behavior: "smooth" });
+
+                document.getElementById("departmentName").focus();
+            }
+
+            // Delete department
+            if (button.classList.contains("delete-btn")) {
+                const confirmed = confirm(
+                    `Delete department "${row.cells[1].textContent}"?`
+                );
+
+                if (!confirmed) return;
+
+                button.disabled = true;
+
+                try {
+                    const response = await fetch(
+                        `${API_BASE_URL}/departments/${departmentId}`,
+                        { method: "DELETE" }
+                    );
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+
+                        throw new Error(
+                            errorText || `Delete failed (${response.status})`
+                        );
+                    }
+
+                    alert("Department deleted successfully!");
+                    await loadDepartments();
+
+                } catch (error) {
+                    console.error("Delete Department Error:", error);
+
+                    alert(
+                        "Department could not be deleted. It may be linked to faculty records, or the backend endpoint may be unavailable."
+                    );
+
+                } finally {
+                    button.disabled = false;
+                }
+            }
+        });
+
+        // Save new department or update existing department
+        departmentForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const departmentData = {
+                departmentName: document.getElementById("departmentName").value.trim(),
+                hodName: document.getElementById("hodName").value.trim()
+            };
+
+            if (!departmentData.departmentName) {
+                formMessage.textContent = "Department name is required.";
+                return;
+            }
+
+            const isEditing = editingDepartmentId !== null;
+
+            const url = isEditing
+                ? `${API_BASE_URL}/departments/${editingDepartmentId}`
+                : `${API_BASE_URL}/departments`;
+
+            const method = isEditing ? "PUT" : "POST";
+
+            saveButton.disabled = true;
+            formMessage.textContent = isEditing
+                ? "Updating department..."
+                : "Saving department...";
+
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(departmentData)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+
+                    throw new Error(
+                        errorText || `Save failed (${response.status})`
+                    );
+                }
+
+                formMessage.textContent = isEditing
+                    ? "Department updated successfully!"
+                    : "Department added successfully!";
+
+                departmentForm.reset();
+                editingDepartmentId = null;
+
+                await loadDepartments();
+
+                setTimeout(() => {
+                    formSection.style.display = "none";
+                    formMessage.textContent = "";
+                    document.getElementById("departmentFormTitle").textContent =
+                        "Add Department";
+                    saveButton.textContent = "Save Department";
+                }, 900);
+
+            } catch (error) {
+                console.error("Save Department Error:", error);
+
+                formMessage.textContent =
+                    "Could not save department. Check the backend endpoint, duplicate department name, and server logs.";
+
+            } finally {
+                saveButton.disabled = false;
+            }
+        });
+
+        // Search by department name or HOD name
+        document.getElementById("departmentSearch").addEventListener("input", function () {
+            const searchText = this.value.toLowerCase().trim();
+
+            const filteredDepartments = allDepartments.filter(department => {
+                const name = (department.departmentName ?? "").toLowerCase();
+                const hod = (department.hodName ?? "").toLowerCase();
+                const id = String(department.departmentId ?? "");
+
+                return name.includes(searchText)
+                    || hod.includes(searchText)
+                    || id.includes(searchText);
+            });
+
+            renderDepartments(filteredDepartments);
+        });
+
+        // Initial load
+        loadDepartments();
+    </script>
+
+</body>
+</html>
+
